@@ -1,666 +1,1833 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>Bitcoin Live Analysis Dashboard | تحليل مباشر للبيتكوين</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bitcoin Live Analysis Dashboard</title>
+
+  <script src="https://s3.tradingview.com/tv.js"></script>
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', 'Tajawal', system-ui, -apple-system, sans-serif;
-    }
     :root {
-      --bg: #f5f7fb;
-      --surface: #ffffff;
-      --text: #1e293b;
-      --text-secondary: #475569;
-      --border: #e2e8f0;
-      --accent: #2563eb;
-      --green: #10b981;
-      --red: #ef4444;
-      --amber: #f59e0b;
-      --shadow: 0 4px 12px rgba(0,0,0,0.04);
-      --chart-bg: #ffffff;
-      --badge-bg: #f1f5f9;
-      --card-header-bg: #f8fafc;
-    }
-    body.dark {
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --text: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --border: #334155;
-      --accent: #3b82f6;
+      --bg: #07111f;
+      --bg2: #0b1728;
+      --card: rgba(15, 23, 42, 0.92);
+      --card2: rgba(30, 41, 59, 0.72);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.18);
       --green: #22c55e;
+      --green2: #10b981;
       --red: #ef4444;
-      --amber: #f59e0b;
-      --shadow: 0 8px 20px rgba(0,0,0,0.5);
-      --chart-bg: #1e293b;
-      --badge-bg: #334155;
-      --card-header-bg: #1a2332;
+      --orange: #f97316;
+      --yellow: #f59e0b;
+      --blue: #38bdf8;
+      --shadow: 0 20px 60px rgba(0,0,0,.35);
     }
+
+    body.light {
+      --bg: #eef2f7;
+      --bg2: #f8fafc;
+      --card: rgba(255,255,255,0.94);
+      --card2: rgba(241,245,249,0.9);
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: rgba(15,23,42,.12);
+      --shadow: 0 16px 40px rgba(15,23,42,.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: var(--bg);
+      margin: 0;
+      font-family: Tahoma, Arial, sans-serif;
       color: var(--text);
-      padding: 1rem;
-      transition: background 0.3s, color 0.2s;
+      background:
+        radial-gradient(circle at top right, rgba(34,197,94,.12), transparent 30%),
+        radial-gradient(circle at top left, rgba(56,189,248,.12), transparent 25%),
+        linear-gradient(160deg, var(--bg), var(--bg2));
+      min-height: 100vh;
     }
+
     .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
+      width: min(1500px, 96%);
+      margin: auto;
+      padding: 18px 0 50px;
     }
-    /* Header & Status */
-    .top-bar {
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px);
+      background: rgba(7,17,31,.72);
+      border-bottom: 1px solid var(--border);
+    }
+
+    body.light .topbar {
+      background: rgba(248,250,252,.78);
+    }
+
+    .topbar-inner {
+      width: min(1500px, 96%);
+      margin: auto;
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      background: var(--surface);
-      padding: 1rem 1.5rem;
-      border-radius: 1.25rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
+      padding: 14px 0;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .status-badge {
+
+    .brand {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      background: var(--badge-bg);
-      padding: 0.4rem 1rem;
-      border-radius: 2rem;
-      font-weight: 600;
-      font-size: 0.9rem;
+      gap: 12px;
     }
-    .led {
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: #111827;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 24px;
+      box-shadow: 0 12px 28px rgba(245,158,11,.25);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(18px, 2vw, 28px);
+      letter-spacing: .2px;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--card2);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: .2s ease;
+      font-weight: 700;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(56,189,248,.45);
+    }
+
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #94a3b8;
-      box-shadow: 0 0 8px currentColor;
+      background: var(--red);
+      box-shadow: 0 0 0 5px rgba(239,68,68,.12);
     }
-    .led.online {
-      background: #10b981;
-      box-shadow: 0 0 12px #10b981;
+
+    .dot.online {
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(34,197,94,.13);
     }
-    .consensus-circle {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      border: 3px solid var(--border);
-      font-weight: bold;
-      text-align: center;
-      line-height: 1.3;
+
+    .app-error {
+      display: none;
+      margin: 16px 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      color: #fecaca;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.3);
     }
-    .dark-mode-toggle {
-      background: var(--badge-bg);
-      border: none;
-      color: var(--text);
-      font-size: 1.3rem;
-      padding: 0.5rem 0.8rem;
-      border-radius: 2rem;
-      cursor: pointer;
-    }
-    /* Grid Layout */
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
+      gap: 16px;
     }
+
+    .market-grid {
+      grid-template-columns: repeat(6, minmax(160px, 1fr));
+      margin-top: 16px;
+    }
+
+    .main-grid {
+      grid-template-columns: 1.55fr .9fr;
+      margin-top: 16px;
+    }
+
+    .sub-grid {
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 16px;
+    }
+
     .card {
-      background: var(--surface);
-      border-radius: 1.25rem;
-      padding: 1.2rem;
-      box-shadow: var(--shadow);
+      background: var(--card);
       border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      overflow: hidden;
     }
-    .card-header {
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .market-card {
+      min-height: 116px;
+    }
+
+    .market-card span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .market-card strong {
+      display: block;
+      margin-top: 10px;
+      font-size: clamp(18px, 2vw, 28px);
+      direction: ltr;
+      text-align: right;
+    }
+
+    .positive {
+      color: var(--green) !important;
+    }
+
+    .negative {
+      color: var(--red) !important;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .consensus {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 24px;
+      min-height: 190px;
+    }
+
+    .gauge {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--green) 0deg, rgba(148,163,184,.18) 0deg);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .gauge::after {
+      content: "";
+      position: absolute;
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+    .gauge > div {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .gauge strong {
+      display: block;
+      font-size: 27px;
+      direction: ltr;
+    }
+
+    .gauge span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .consensus-title {
+      font-size: clamp(26px, 4vw, 52px);
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: .5px;
+    }
+
+    .consensus-sub {
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.8;
+    }
+
+    .split {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .mini-stat {
+      min-width: 130px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mini-stat strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 24px;
+      direction: ltr;
+    }
+
+    #tradingview_chart {
+      height: 560px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #020617;
+    }
+
+    .row-between {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-weight: 600;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
     }
-    .price-large {
-      font-size: 2.3rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
+
+    select {
+      background: var(--card2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 12px;
+      outline: none;
     }
-    .change-badge {
-      padding: 0.2rem 0.8rem;
-      border-radius: 2rem;
-      font-weight: 600;
-      background: var(--badge-bg);
+
+    .metric-list {
+      display: grid;
+      gap: 10px;
     }
-    .positive { color: var(--green); }
-    .negative { color: var(--red); }
-    .row {
+
+    .metric-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card2);
     }
-    .indicator-value {
-      font-weight: 700;
-      font-size: 1rem;
+
+    .metric-row span {
+      color: var(--muted);
+      font-size: 13px;
     }
-    .recommendation-table {
+
+    .metric-row strong {
+      direction: ltr;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 0.5rem;
-    }
-    .recommendation-table th {
-      text-align: right;
-      font-weight: 600;
-      color: var(--text-secondary);
-      padding-bottom: 0.3rem;
-    }
-    .recommendation-table td {
-      padding: 0.4rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .badge-signal {
-      font-weight: 700;
-      padding: 0.15rem 0.6rem;
-      border-radius: 1rem;
-      font-size: 0.8rem;
-      display: inline-block;
-    }
-    .buy-strong { background: #10b98133; color: var(--green); }
-    .buy { background: #22c55e22; color: var(--green); }
-    .neutral { background: #f59e0b22; color: var(--amber); }
-    .sell { background: #ef444422; color: var(--red); }
-    .sell-strong { background: #dc262622; color: var(--red); }
-    .tradingview-chart {
-      width: 100%;
-      height: 450px;
-      border-radius: 1rem;
       overflow: hidden;
-      border: 1px solid var(--border);
+      border-radius: 16px;
     }
-    @media (max-width: 600px) {
-      .price-large { font-size: 1.8rem; }
-      .consensus-circle { width: 90px; height: 90px; font-size: 0.8rem; }
+
+    th, td {
+      padding: 13px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
     }
-    button, select {
-      background: var(--badge-bg);
+
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      background: var(--card2);
+    }
+
+    td {
+      font-weight: 700;
+    }
+
+    .pill {
+      display: inline-flex;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 13px;
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.4rem 0.8rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .buyStrong {
+      color: var(--green2);
+      background: rgba(16,185,129,.12);
+    }
+
+    .buy {
+      color: var(--green);
+      background: rgba(34,197,94,.12);
+    }
+
+    .neutral {
+      color: var(--yellow);
+      background: rgba(245,158,11,.12);
+    }
+
+    .sell {
+      color: var(--orange);
+      background: rgba(249,115,22,.12);
+    }
+
+    .sellStrong {
+      color: var(--red);
+      background: rgba(239,68,68,.12);
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .level-box {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      min-height: 92px;
+    }
+
+    .level-box span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .level-box b {
+      display: block;
+      margin-top: 8px;
+      font-size: 20px;
+      direction: ltr;
+    }
+
+    .level-box small {
+      color: var(--muted);
+      display: block;
+      margin-top: 6px;
+      direction: ltr;
+      text-align: right;
+    }
+
+    .alerts {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .alert-item {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--card2);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .alert-item small {
+      color: var(--muted);
+      direction: ltr;
+      white-space: nowrap;
+    }
+
+    .alert-item.bull {
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.10);
+    }
+
+    .alert-item.bear {
+      border-color: rgba(239,68,68,.35);
+      background: rgba(239,68,68,.10);
+    }
+
+    .alert-item.warn {
+      border-color: rgba(245,158,11,.35);
+      background: rgba(245,158,11,.10);
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 1200px) {
+      .market-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sub-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .market-grid,
+      .sub-grid,
+      .level-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .consensus {
+        grid-template-columns: 1fr;
+        text-align: center;
+        justify-items: center;
+      }
+
+      .split {
+        justify-content: center;
+      }
+
+      #tradingview_chart {
+        height: 470px;
+      }
+
+      .topbar-inner {
+        justify-content: center;
+      }
     }
   </style>
 </head>
+
 <body>
-<div class="container">
-  <!-- أعلى الصفحة: مؤشر الإجماع + حالة الاتصال -->
-  <div class="top-bar">
-    <div class="consensus-circle" id="consensusMeter">
-      <span id="consensusDirection">--</span>
-      <small id="consensusConfidence">0%</small>
-      <small id="consensusBuyers">Buy 50%</small>
-    </div>
-    <div style="display: flex; gap:1rem; align-items:center;">
-      <div class="status-badge" id="connectionStatus">
-        <span class="led" id="ledIndicator"></span>
-        <span id="statusText">جارٍ الاتصال...</span>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo">₿</div>
+        <div>
+          <h1>Bitcoin Live Analysis Dashboard</h1>
+          <p>BTC/USDT Real-Time Analysis from Binance</p>
+        </div>
       </div>
-      <button class="dark-mode-toggle" id="darkToggle">🌙</button>
-    </div>
-  </div>
 
-  <!-- القسم الأول: معلومات السوق -->
-  <div class="grid">
-    <div class="card">
-      <div class="card-header">السعر الحالي BTC/USDT</div>
-      <div class="price-large" id="livePrice">0.00</div>
-      <div class="row">
-        <span>التغير 24س</span>
-        <span class="change-badge" id="priceChangePercent">0.00%</span>
+      <div class="actions">
+        <div class="connection">
+          <span id="connDot" class="dot"></span>
+          <span id="connText">غير متصل</span>
+        </div>
+        <button id="soundToggle" class="btn">تفعيل الصوت</button>
+        <button id="themeToggle" class="btn">الوضع النهاري</button>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header">حجم التداول 24س</div>
-      <div class="indicator-value" id="volume24">-</div>
-      <div>أعلى: <span id="high24">-</span></div>
-      <div>أدنى: <span id="low24">-</span></div>
-      <div class="row" style="margin-top:0.5rem;"><small>آخر تحديث: <span id="lastUpdateTime">--</span></small></div>
-    </div>
-    <div class="card">
-      <div class="card-header">الدعم والمقاومة</div>
-      <div>🔻 دعم1: <span id="support1">-</span></div>
-      <div>🔻 دعم2: <span id="support2">-</span></div>
-      <div>🔺 مقاومة1: <span id="resistance1">-</span></div>
-      <div>🔺 مقاومة2: <span id="resistance2">-</span></div>
-    </div>
-    <div class="card">
-      <div class="card-header">إشارة التداول الحية</div>
-      <div>دخول: <span id="entryPoint">-</span></div>
-      <div>وقف خسارة: <span id="stopLoss">-</span></div>
-      <div>هدف1: <span id="target1">-</span></div>
-      <div>هدف2: <span id="target2">-</span></div>
-      <div>مخاطرة/عائد: <span id="riskReward">-</span></div>
-    </div>
   </div>
 
-  <!-- القسم الثاني: رسم بياني TradingView -->
-  <div class="card" style="padding:0.5rem;">
-    <div class="tradingview-chart" id="tradingviewWidget"></div>
-  </div>
+  <main class="container">
+    <div id="appError" class="app-error"></div>
 
-  <!-- القسم الثالث: المؤشرات الفنية -->
-  <div class="grid">
-    <div class="card">
-      <div class="card-header">الاتجاه (EMA)</div>
-      <div class="row"><span>EMA 20</span><span id="ema20">-</span></div>
-      <div class="row"><span>EMA 50</span><span id="ema50">-</span></div>
-      <div class="row"><span>EMA 100</span><span id="ema100">-</span></div>
-      <div class="row"><span>EMA 200</span><span id="ema200">-</span></div>
+    <!-- Market Consensus -->
+    <section id="consensusCard" class="card consensus">
+      <div id="consensusGauge" class="gauge">
+        <div>
+          <strong id="consensusPercent">—</strong>
+          <span>Confidence</span>
+        </div>
+      </div>
+
+      <div>
+        <p id="consensusDirection" class="consensus-title">جاري التحليل...</p>
+        <div class="consensus-sub">
+          يتم احتساب الإجماع من توصيات فريمات 5m و 15m و 30m بناءً على RSI و MACD و EMA و Bollinger و Volume و ADX.
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="mini-stat">
+          <span>Buyers</span>
+          <strong id="buyersPct">—</strong>
+        </div>
+        <div class="mini-stat">
+          <span>Sellers</span>
+          <strong id="sellersPct">—</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Market Data -->
+    <section class="grid market-grid">
+      <div class="card market-card">
+        <span>السعر الحالي BTC/USDT</span>
+        <strong id="marketPrice">—</strong>
+      </div>
+      <div class="card market-card">
+        <span>نسبة التغير 24 ساعة</span>
+        <strong id="marketChange">—</strong>
+      </div>
+      <div class="card market-card">
+        <span>حجم التداول 24 ساعة</span>
+        <strong id="marketVolume">—</strong>
+      </div>
+      <div class="card market-card">
+        <span>أعلى سعر 24 ساعة</span>
+        <strong id="marketHigh">—</strong>
+      </div>
+      <div class="card market-card">
+        <span>أدنى سعر 24 ساعة</span>
+        <strong id="marketLow">—</strong>
+      </div>
+      <div class="card market-card">
+        <span>آخر وقت تحديث</span>
+        <strong id="lastUpdate">—</strong>
+      </div>
+    </section>
+
+    <!-- Chart + Indicators -->
+    <section class="grid main-grid">
+      <div class="card">
+        <div class="row-between">
+          <h2>الرسم البياني المباشر TradingView</h2>
+          <span class="muted">BINANCE:BTCUSDT</span>
+        </div>
+        <div id="tradingview_chart"></div>
+      </div>
+
+      <div class="card">
+        <div class="row-between">
+          <h2>المؤشرات الفنية</h2>
+          <select id="indicatorFrame">
+            <option value="1m">1m</option>
+            <option value="5m">5m</option>
+            <option value="15m" selected>15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="4h">4h</option>
+            <option value="1d">1D</option>
+          </select>
+        </div>
+
+        <div class="metric-list">
+          <div class="metric-row"><span>EMA 20</span><strong id="ema20">—</strong></div>
+          <div class="metric-row"><span>EMA 50</span><strong id="ema50">—</strong></div>
+          <div class="metric-row"><span>EMA 100</span><strong id="ema100">—</strong></div>
+          <div class="metric-row"><span>EMA 200</span><strong id="ema200">—</strong></div>
+          <div class="metric-row"><span>RSI 14</span><strong id="rsi14">—</strong></div>
+          <div class="metric-row"><span>MACD</span><strong id="macdVal">—</strong></div>
+          <div class="metric-row"><span>Stochastic RSI</span><strong id="stochRsi">—</strong></div>
+          <div class="metric-row"><span>Volume</span><strong id="volumeInd">—</strong></div>
+          <div class="metric-row"><span>OBV</span><strong id="obvVal">—</strong></div>
+          <div class="metric-row"><span>VWAP</span><strong id="vwapVal">—</strong></div>
+          <div class="metric-row"><span>Bollinger Bands</span><strong id="bbVal">—</strong></div>
+          <div class="metric-row"><span>ATR</span><strong id="atrVal">—</strong></div>
+          <div class="metric-row"><span>ADX</span><strong id="adxVal">—</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recommendations + Support + Signals -->
+    <section class="grid sub-grid">
+      <div class="card">
+        <h2>التوصيات الذكية</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>الفريم</th>
+              <th>التوصية</th>
+              <th>الثقة</th>
+            </tr>
+          </thead>
+          <tbody id="recommendationsBody">
+            <tr><td colspan="3">جاري جمع البيانات...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>الدعم والمقاومة</h2>
+        <div class="level-grid">
+          <div class="level-box">
+            <span>أقرب دعم</span>
+            <div id="support1">—</div>
+          </div>
+          <div class="level-box">
+            <span>الدعم الثاني</span>
+            <div id="support2">—</div>
+          </div>
+          <div class="level-box">
+            <span>أقرب مقاومة</span>
+            <div id="resistance1">—</div>
+          </div>
+          <div class="level-box">
+            <span>المقاومة الثانية</span>
+            <div id="resistance2">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>إشارات التداول</h2>
+        <div class="metric-list">
+          <div class="metric-row"><span>الحالة</span><strong id="signalSide">—</strong></div>
+          <div class="metric-row"><span>نقطة الدخول</span><strong id="entryPoint">—</strong></div>
+          <div class="metric-row"><span>وقف الخسارة</span><strong id="stopLoss">—</strong></div>
+          <div class="metric-row"><span>الهدف الأول</span><strong id="target1">—</strong></div>
+          <div class="metric-row"><span>الهدف الثاني</span><strong id="target2">—</strong></div>
+          <div class="metric-row"><span>المخاطرة / العائد</span><strong id="rrRatio">—</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alerts -->
+    <section class="card" style="margin-top:16px;">
+      <div class="row-between">
+        <h2>التنبيهات المباشرة</h2>
+        <span class="muted">MACD / RSI / Support / Resistance</span>
+      </div>
+      <ul id="alertsList" class="alerts">
+        <li class="alert-item">
+          <span class="muted">لا توجد تنبيهات حتى الآن.</span>
+          <small>—</small>
+        </li>
+      </ul>
+    </section>
+
+    <div class="footer">
+      جميع البيانات من Binance WebSocket و Binance REST API، والمؤشرات محسوبة محلياً من بيانات السوق الحقيقية.
+      <br>
+      تنبيه: هذه اللوحة تعليمية وتحليلية وليست نصيحة مالية.
     </div>
-    <div class="card">
-      <div class="card-header">الزخم</div>
-      <div class="row"><span>RSI 14</span><span id="rsi14">-</span></div>
-      <div class="row"><span>MACD</span><span id="macdLine">-</span></div>
-      <div class="row"><span>Stoch RSI</span><span id="stochRsi">-</span></div>
-    </div>
-    <div class="card">
-      <div class="card-header">الحجم والتقلب</div>
-      <div class="row"><span>OBV</span><span id="obv">-</span></div>
-      <div class="row"><span>VWAP</span><span id="vwap">-</span></div>
-      <div class="row"><span>Bollinger (أعلى/أسفل)</span><span id="bollinger">-</span></div>
-      <div class="row"><span>ATR</span><span id="atr">-</span></div>
-    </div>
-  </div>
+  </main>
 
-  <!-- القسم الرابع: توصيات ذكية -->
-  <div class="card">
-    <div class="card-header">التوصيات حسب الفريم</div>
-    <table class="recommendation-table">
-      <thead><tr><th>الفريم</th><th>التوصية</th><th>الثقة</th></tr></thead>
-      <tbody>
-        <tr><td>5m</td><td id="rec5mAction">-</td><td id="rec5mConf">-</td></tr>
-        <tr><td>15m</td><td id="rec15mAction">-</td><td id="rec15mConf">-</td></tr>
-        <tr><td>30m</td><td id="rec30mAction">-</td><td id="rec30mConf">-</td></tr>
-      </tbody>
-    </table>
-  </div>
+  <script>
+    const SYMBOL = "BTCUSDT";
+    const LOWER_SYMBOL = "btcusdt";
+    const INTERVALS = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"];
+    const RECOMMENDATION_FRAMES = ["5m", "15m", "30m"];
 
-  <!-- قسم التنبيهات -->
-  <div class="card">
-    <div class="card-header">🔔 تنبيهات فورية</div>
-    <div id="alertsContainer" style="max-height: 100px; overflow-y: auto; font-size:0.9rem;">لا توجد تنبيهات حالياً</div>
-  </div>
-</div>
+    const candles = Object.fromEntries(INTERVALS.map(tf => [tf, []]));
+    const metrics = {};
 
-<script>
-  (function() {
-    // ---------- الإعدادات ----------
-    const SYMBOL = 'btcusdt';
-    let currentPrice = 0;
-    let priceChangePercent = 0;
-    let high24 = 0, low24 = 0, volume24 = 0;
-    let lastUpdate = '';
-    let historicalCandles = []; // لتخزين بيانات 1m للتحليل
-    let alertMessages = [];
+    let ws = null;
+    let connected = false;
+    let reconnectTimer = null;
+    let currentLevels = {};
+    let lastRenderPrice = null;
 
-    // DOM Elements
-    const livePriceEl = document.getElementById('livePrice');
-    const priceChangeEl = document.getElementById('priceChangePercent');
-    const volume24El = document.getElementById('volume24');
-    const high24El = document.getElementById('high24');
-    const low24El = document.getElementById('low24');
-    const lastUpdateEl = document.getElementById('lastUpdateTime');
-    const statusText = document.getElementById('statusText');
-    const ledIndicator = document.getElementById('ledIndicator');
-    const consensusDirection = document.getElementById('consensusDirection');
-    const consensusConfidence = document.getElementById('consensusConfidence');
-    const consensusBuyers = document.getElementById('consensusBuyers');
-    
-    // مؤشرات
-    const ema20El = document.getElementById('ema20'), ema50El = document.getElementById('ema50');
-    const ema100El = document.getElementById('ema100'), ema200El = document.getElementById('ema200');
-    const rsi14El = document.getElementById('rsi14'), macdEl = document.getElementById('macdLine');
-    const stochRsiEl = document.getElementById('stochRsi'), obvEl = document.getElementById('obv');
-    const vwapEl = document.getElementById('vwap'), bollingerEl = document.getElementById('bollinger');
-    const atrEl = document.getElementById('atr');
-    
-    // توصيات
-    const rec5mAction = document.getElementById('rec5mAction'), rec5mConf = document.getElementById('rec5mConf');
-    const rec15mAction = document.getElementById('rec15mAction'), rec15mConf = document.getElementById('rec15mConf');
-    const rec30mAction = document.getElementById('rec30mAction'), rec30mConf = document.getElementById('rec30mConf');
-    
-    // دعم ومقاومة وإشارات
-    const support1El = document.getElementById('support1'), support2El = document.getElementById('support2');
-    const resistance1El = document.getElementById('resistance1'), resistance2El = document.getElementById('resistance2');
-    const entryEl = document.getElementById('entryPoint'), stopLossEl = document.getElementById('stopLoss');
-    const target1El = document.getElementById('target1'), target2El = document.getElementById('target2');
-    const riskRewardEl = document.getElementById('riskReward');
-    const alertsContainer = document.getElementById('alertsContainer');
+    let market = {
+      price: null,
+      change: null,
+      volumeBase: null,
+      volumeQuote: null,
+      high: null,
+      low: null,
+      updated: null
+    };
 
-    // WebSocket
-    let ws;
-    const WS_URL = 'wss://stream.binance.com:9443/ws';
+    let soundEnabled = false;
+    let audioCtx = null;
+    const alertCooldown = {};
+    const rsiFlags = {};
 
-    function connectWebSocket() {
-      if (ws) ws.close();
-      ws = new WebSocket(`${WS_URL}/${SYMBOL}@ticker`);
-      
+    const $ = id => document.getElementById(id);
+
+    function finite(n) {
+      return typeof n === "number" && Number.isFinite(n);
+    }
+
+    function setText(id, value) {
+      const el = $(id);
+      if (el) el.textContent = value;
+    }
+
+    function setHTML(id, value) {
+      const el = $(id);
+      if (el) el.innerHTML = value;
+    }
+
+    function mean(arr) {
+      const nums = arr.filter(finite);
+      if (!nums.length) return null;
+      return nums.reduce((a, b) => a + b, 0) / nums.length;
+    }
+
+    function fmtPrice(n) {
+      if (!finite(n)) return "—";
+      return "$" + n.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function fmtNum(n, digits = 2) {
+      if (!finite(n)) return "—";
+      return n.toLocaleString("en-US", {
+        maximumFractionDigits: digits
+      });
+    }
+
+    function fmtPct(n) {
+      if (!finite(n)) return "—";
+      const sign = n > 0 ? "+" : "";
+      return `${sign}${n.toFixed(2)}%`;
+    }
+
+    function fmtCompact(n, digits = 2) {
+      if (!finite(n)) return "—";
+      return new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: digits
+      }).format(n);
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function showError(msg) {
+      const el = $("appError");
+      if (!el) return;
+      el.style.display = msg ? "block" : "none";
+      el.textContent = msg || "";
+    }
+
+    function updateConnection() {
+      $("connDot").classList.toggle("online", connected);
+      setText("connText", connected ? "متصل" : "غير متصل");
+    }
+
+    async function loadHistory(interval) {
+      const url = `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${interval}&limit=300`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Failed to load ${interval}`);
+      const data = await res.json();
+
+      candles[interval] = data.map(k => ({
+        t: Number(k[0]),
+        o: Number(k[1]),
+        h: Number(k[2]),
+        l: Number(k[3]),
+        c: Number(k[4]),
+        v: Number(k[5]),
+        qv: Number(k[7]),
+        closed: true
+      }));
+    }
+
+    function connectSocket() {
+      const streams = [
+        `${LOWER_SYMBOL}@ticker`,
+        ...INTERVALS.map(tf => `${LOWER_SYMBOL}@kline_${tf}`)
+      ].join("/");
+
+      const url = `wss://stream.binance.com:9443/stream?streams=${streams}`;
+
+      ws = new WebSocket(url);
+
       ws.onopen = () => {
-        setConnectionStatus(true);
-        // أيضا الاشتراك في kline 1m للحصول على بيانات إضافية للتحليل
-        subscribeKline();
+        connected = true;
+        updateConnection();
+        fireAlert("socket-open", "تم الاتصال بـ Binance WebSocket", "bull", 10000);
       };
-      
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.e === '24hrTicker') {
-            updateMarketData(data);
-          } else if (data.e === 'kline') {
-            processKline(data);
-          }
-        } catch (e) {}
-      };
-      
-      ws.onerror = () => setConnectionStatus(false);
+
       ws.onclose = () => {
-        setConnectionStatus(false);
-        setTimeout(connectWebSocket, 3000);
+        connected = false;
+        updateConnection();
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(connectSocket, 3000);
+      };
+
+      ws.onerror = () => {
+        connected = false;
+        updateConnection();
+        try { ws.close(); } catch (_) {}
+      };
+
+      ws.onmessage = event => {
+        const msg = JSON.parse(event.data);
+        const data = msg.data;
+
+        if (!data) return;
+
+        if (data.e === "24hrTicker") {
+          handleTicker(data);
+        }
+
+        if (data.e === "kline") {
+          handleKline(data);
+        }
       };
     }
 
-    function subscribeKline() {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          method: "SUBSCRIBE",
-          params: [`${SYMBOL}@kline_1m`],
-          id: 1
-        }));
+    function handleTicker(d) {
+      const p = Number(d.c);
+
+      if (Number.isFinite(p)) {
+        market.price = p;
       }
+
+      market.change = Number(d.P);
+      market.volumeBase = Number(d.v);
+      market.volumeQuote = Number(d.q);
+      market.high = Number(d.h);
+      market.low = Number(d.l);
+      market.updated = Date.now();
     }
 
-    function setConnectionStatus(connected) {
-      if (connected) {
-        statusText.textContent = 'متصل';
-        ledIndicator.className = 'led online';
+    function handleKline(d) {
+      const k = d.k;
+      const interval = k.i;
+
+      if (!candles[interval]) return;
+
+      const candle = {
+        t: Number(k.t),
+        o: Number(k.o),
+        h: Number(k.h),
+        l: Number(k.l),
+        c: Number(k.c),
+        v: Number(k.v),
+        qv: Number(k.q),
+        closed: Boolean(k.x)
+      };
+
+      const arr = candles[interval];
+      const last = arr[arr.length - 1];
+
+      if (last && last.t === candle.t) {
+        arr[arr.length - 1] = candle;
       } else {
-        statusText.textContent = 'غير متصل';
-        ledIndicator.className = 'led';
+        arr.push(candle);
+        if (arr.length > 500) arr.shift();
       }
-    }
 
-    function updateMarketData(ticker) {
-      currentPrice = parseFloat(ticker.c);
-      priceChangePercent = parseFloat(ticker.P);
-      high24 = parseFloat(ticker.h);
-      low24 = parseFloat(ticker.l);
-      volume24 = parseFloat(ticker.v);
-      lastUpdate = new Date().toLocaleTimeString('ar-EG');
-      
-      livePriceEl.textContent = `$${currentPrice.toFixed(2)}`;
-      const changeClass = priceChangePercent >= 0 ? 'positive' : 'negative';
-      priceChangeEl.className = `change-badge ${changeClass}`;
-      priceChangeEl.textContent = `${priceChangePercent.toFixed(2)}%`;
-      volume24El.textContent = `${(volume24).toFixed(2)} BTC`;
-      high24El.textContent = `$${high24.toFixed(2)}`;
-      low24El.textContent = `$${low24.toFixed(2)}`;
-      lastUpdateEl.textContent = lastUpdate;
-      
-      computeIndicatorsAndSignals();
-    }
-
-    function processKline(klineData) {
-      const candle = klineData.k;
-      if (!candle) return;
-      const close = parseFloat(candle.c);
-      const open = parseFloat(candle.o);
-      const high = parseFloat(candle.h);
-      const low = parseFloat(candle.l);
-      const volume = parseFloat(candle.v);
-      const time = candle.t;
-      
-      historicalCandles.push({ time, open, high, low, close, volume });
-      if (historicalCandles.length > 300) historicalCandles.shift();
-      
-      // تحديث بعض المؤشرات المعتمدة على الشموع
-      computeIndicatorsAndSignals();
-    }
-
-    // ---------- الحسابات الفنية ----------
-    function computeEMA(data, period) {
-      if (data.length < period) return null;
-      const k = 2 / (period + 1);
-      let ema = data.slice(0, period).reduce((a,b) => a + b.close, 0) / period;
-      for (let i = period; i < data.length; i++) {
-        ema = data[i].close * k + ema * (1 - k);
+      if (!finite(market.price)) {
+        market.price = candle.c;
       }
-      return ema;
+
+      market.updated = Date.now();
     }
 
-    function computeRSI(closes, period = 14) {
-      if (closes.length < period + 1) return null;
-      let gains = 0, losses = 0;
-      for (let i = closes.length - period; i < closes.length; i++) {
-        const diff = closes[i] - closes[i-1];
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
-      }
-      let avgGain = gains / period;
-      let avgLoss = losses / period;
-      if (avgLoss === 0) return 100;
-      const rs = avgGain / avgLoss;
-      return 100 - (100 / (1 + rs));
-    }
-
-    function computeMACD(closes) {
-      if (closes.length < 26) return null;
-      const ema12 = computeEMA(closes.map((c,i) => ({close:c})), 12);
-      const ema26 = computeEMA(closes.map((c,i) => ({close:c})), 26);
-      if (!ema12 || !ema26) return null;
-      return { macd: ema12 - ema26, signal: null };
-    }
-
-    function computeBollinger(closes, period = 20) {
-      if (closes.length < period) return null;
-      const slice = closes.slice(-period);
-      const mean = slice.reduce((a,b)=>a+b,0)/period;
-      const variance = slice.reduce((a,b)=>a+Math.pow(b-mean,2),0)/period;
-      const std = Math.sqrt(variance);
-      return { upper: mean + 2*std, lower: mean - 2*std, mean };
-    }
-
-    function computeATR(candles, period = 14) {
-      if (candles.length < period) return null;
-      let trValues = [];
-      for (let i = 1; i < candles.length; i++) {
-        const high = candles[i].high, low = candles[i].low, prevClose = candles[i-1].close;
-        trValues.push(Math.max(high-low, Math.abs(high-prevClose), Math.abs(low-prevClose)));
-      }
-      return trValues.slice(-period).reduce((a,b)=>a+b,0)/period;
-    }
-
-    function generateRecommendation(score) {
-      if (score >= 81) return { action: 'شراء قوي', className: 'buy-strong' };
-      if (score >= 61) return { action: 'شراء', className: 'buy' };
-      if (score >= 41) return { action: 'محايد', className: 'neutral' };
-      if (score >= 21) return { action: 'بيع', className: 'sell' };
-      return { action: 'بيع قوي', className: 'sell-strong' };
-    }
-
-    function computeIndicatorsAndSignals() {
-      if (!currentPrice || historicalCandles.length < 50) return;
-      
-      const closes = historicalCandles.map(c => c.close);
-      const volumes = historicalCandles.map(c => c.volume);
-      
-      // EMA
-      const ema20 = computeEMA(historicalCandles, 20);
-      const ema50 = computeEMA(historicalCandles, 50);
-      const ema100 = computeEMA(historicalCandles, 100);
-      const ema200 = computeEMA(historicalCandles, 200);
-      
-      ema20El.textContent = ema20 ? `$${ema20.toFixed(2)}` : '-';
-      ema50El.textContent = ema50 ? `$${ema50.toFixed(2)}` : '-';
-      ema100El.textContent = ema100 ? `$${ema100.toFixed(2)}` : '-';
-      ema200El.textContent = ema200 ? `$${ema200.toFixed(2)}` : '-';
-      
-      const rsi = computeRSI(closes);
-      rsi14El.textContent = rsi ? rsi.toFixed(1) : '-';
-      
-      const macdData = computeMACD(closes);
-      macdEl.textContent = macdData ? macdData.macd.toFixed(4) : '-';
-      
-      // Stoch RSI مبسط
-      const stochVal = rsi ? ((rsi - 30) / 70 * 100).toFixed(1) : '-';
-      stochRsiEl.textContent = stochVal !== '-' ? stochVal : '-';
-      
-      // OBV تقريبي
-      let obv = 0;
-      for (let i = 1; i < historicalCandles.length; i++) {
-        if (closes[i] > closes[i-1]) obv += volumes[i];
-        else if (closes[i] < closes[i-1]) obv -= volumes[i];
-      }
-      obvEl.textContent = obv.toFixed(0);
-      
-      const vwapVal = volumes.reduce((acc, v, i) => acc + (closes[i] * v), 0) / volumes.reduce((a,b)=>a+b,1);
-      vwapEl.textContent = `$${vwapVal.toFixed(2)}`;
-      
-      const boll = computeBollinger(closes);
-      bollingerEl.textContent = boll ? `$${boll.upper.toFixed(2)} / $${boll.lower.toFixed(2)}` : '-';
-      
-      const atr = computeATR(historicalCandles);
-      atrEl.textContent = atr ? atr.toFixed(4) : '-';
-      
-      // الدعم والمقاومة (مبسطة من القمم والقيعان)
-      const recentLows = closes.slice(-30).sort((a,b)=>a-b);
-      const recentHighs = closes.slice(-30).sort((a,b)=>b-a);
-      const support1 = recentLows[0] || currentPrice*0.99;
-      const support2 = recentLows[1] || currentPrice*0.98;
-      const resistance1 = recentHighs[0] || currentPrice*1.01;
-      const resistance2 = recentHighs[1] || currentPrice*1.02;
-      
-      support1El.textContent = `$${support1.toFixed(2)}`;
-      support2El.textContent = `$${support2.toFixed(2)}`;
-      resistance1El.textContent = `$${resistance1.toFixed(2)}`;
-      resistance2El.textContent = `$${resistance2.toFixed(2)}`;
-      
-      // إشارات تداول
-      const entry = currentPrice;
-      const stopLoss = support1 * 0.998;
-      const target1 = resistance1;
-      const target2 = resistance2;
-      const risk = entry - stopLoss;
-      const reward = target1 - entry;
-      const rr = risk > 0 ? (reward / risk).toFixed(2) : '-';
-      
-      entryEl.textContent = `$${entry.toFixed(2)}`;
-      stopLossEl.textContent = `$${stopLoss.toFixed(2)}`;
-      target1El.textContent = `$${target1.toFixed(2)}`;
-      target2El.textContent = `$${target2.toFixed(2)}`;
-      riskRewardEl.textContent = rr;
-      
-      // توصيات لكل فريم (محاكاة بناء على rsi وema)
-      const scoreBase = (rsi > 50 ? 30 : 20) + (ema20 > ema50 ? 25 : 15) + (currentPrice > ema20 ? 20 : 10);
-      const rec5m = generateRecommendation(Math.min(100, scoreBase + 5));
-      const rec15m = generateRecommendation(Math.min(100, scoreBase + 10));
-      const rec30m = generateRecommendation(Math.min(100, scoreBase));
-      
-      rec5mAction.innerHTML = `<span class="badge-signal ${rec5m.className}">${rec5m.action}</span>`;
-      rec5mConf.textContent = `${Math.min(99, scoreBase+5)}%`;
-      rec15mAction.innerHTML = `<span class="badge-signal ${rec15m.className}">${rec15m.action}</span>`;
-      rec15mConf.textContent = `${Math.min(99, scoreBase+10)}%`;
-      rec30mAction.innerHTML = `<span class="badge-signal ${rec30m.className}">${rec30m.action}</span>`;
-      rec30mConf.textContent = `${Math.min(99, scoreBase)}%`;
-      
-      // مؤشر الإجماع
-      const buyersPercent = rsi ? Math.min(90, Math.max(10, rsi)) : 50;
-      const sellersPercent = 100 - buyersPercent;
-      let direction = 'محايد', color = '#f59e0b';
-      if (buyersPercent > 70) { direction = '🟢 شراء قوي'; color = '#10b981'; }
-      else if (buyersPercent > 55) { direction = '🟢 شراء'; color = '#22c55e'; }
-      else if (buyersPercent < 30) { direction = '🔴 بيع قوي'; color = '#ef4444'; }
-      else if (buyersPercent < 45) { direction = '🔴 بيع'; color = '#ef4444'; }
-      
-      consensusDirection.textContent = direction;
-      consensusConfidence.textContent = `الثقة: ${buyersPercent.toFixed(0)}%`;
-      consensusBuyers.textContent = `مشترين ${buyersPercent.toFixed(0)}%`;
-      document.querySelector('.consensus-circle').style.borderColor = color;
-      
-      // تنبيهات
-      checkAlerts(rsi, currentPrice, support1, resistance1, macdData);
-    }
-
-    function checkAlerts(rsi, price, support, resistance, macd) {
-      if (!rsi) return;
-      let newAlerts = [];
-      if (rsi > 70) newAlerts.push('⚠️ تشبع شراء RSI');
-      if (rsi < 30) newAlerts.push('⚠️ تشبع بيع RSI');
-      if (price > resistance) newAlerts.push('🚀 اختراق مقاومة');
-      if (price < support) newAlerts.push('📉 كسر دعم');
-      if (macd && macd.macd > 0 && Math.abs(macd.macd) < 0.5) newAlerts.push('📊 تقاطع MACD إيجابي');
-      
-      if (newAlerts.length) {
-        alertsContainer.innerHTML = newAlerts.map(a => `<div>${a}</div>`).join('');
-      }
-    }
-
-    // TradingView Widget
     function initTradingView() {
-      const container = document.getElementById('tradingviewWidget');
-      container.innerHTML = '';
-      const script = document.createElement('script');
-      script.src = 'https://s3.tradingview.com/tv.js';
-      script.onload = () => {
-        new TradingView.widget({
-          container_id: 'tradingviewWidget',
-          symbol: 'BINANCE:BTCUSDT',
-          interval: '1',
-          theme: document.body.classList.contains('dark') ? 'dark' : 'light',
-          style: '1',
-          locale: 'ar_AE',
-          toolbar_bg: '#f1f3f6',
-          enable_publishing: false,
-          allow_symbol_change: false,
-          height: 450,
-          width: '100%',
-        });
-      };
-      container.appendChild(script);
+      const container = $("tradingview_chart");
+      if (!container) return;
+
+      container.innerHTML = "";
+
+      if (!window.TradingView) {
+        setTimeout(initTradingView, 500);
+        return;
+      }
+
+      new TradingView.widget({
+        autosize: true,
+        symbol: "BINANCE:BTCUSDT",
+        interval: "15",
+        timezone: "Etc/UTC",
+        theme: document.body.classList.contains("light") ? "light" : "dark",
+        style: "1",
+        locale: "ar",
+        toolbar_bg: "#0f172a",
+        enable_publishing: false,
+        allow_symbol_change: false,
+        hide_side_toolbar: false,
+        withdateranges: true,
+        details: true,
+        hotlist: false,
+        calendar: false,
+        studies: [
+          "RSI@tv-basicstudies",
+          "MACD@tv-basicstudies"
+        ],
+        container_id: "tradingview_chart"
+      });
     }
 
-    // Dark mode
-    const darkToggle = document.getElementById('darkToggle');
-    darkToggle.addEventListener('click', () => {
-      document.body.classList.toggle('dark');
-      darkToggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
-      initTradingView(); // إعادة إنشاء الشارت بالثيم
-    });
+    function emaArray(values, period) {
+      const out = new Array(values.length).fill(null);
+      if (values.length < period) return out;
 
-    // بدء الاتصال
-    connectWebSocket();
-    initTradingView();
-    setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN && historicalCandles.length) {
-        computeIndicatorsAndSignals();
+      let sum = 0;
+      const k = 2 / (period + 1);
+
+      for (let i = 0; i < values.length; i++) {
+        if (i < period) {
+          sum += values[i];
+          if (i === period - 1) out[i] = sum / period;
+        } else {
+          out[i] = values[i] * k + out[i - 1] * (1 - k);
+        }
       }
-    }, 1000);
-  })();
-</script>
+
+      return out;
+    }
+
+    function rsiArray(values, period = 14) {
+      const out = new Array(values.length).fill(null);
+      if (values.length <= period) return out;
+
+      let gain = 0;
+      let loss = 0;
+
+      for (let i = 1; i <= period; i++) {
+        const diff = values[i] - values[i - 1];
+        if (diff >= 0) gain += diff;
+        else loss -= diff;
+      }
+
+      let avgGain = gain / period;
+      let avgLoss = loss / period;
+
+      out[period] = avgLoss === 0
+        ? 100
+        : 100 - 100 / (1 + avgGain / avgLoss);
+
+      for (let i = period + 1; i < values.length; i++) {
+        const diff = values[i] - values[i - 1];
+        const g = diff > 0 ? diff : 0;
+        const l = diff < 0 ? -diff : 0;
+
+        avgGain = (avgGain * (period - 1) + g) / period;
+        avgLoss = (avgLoss * (period - 1) + l) / period;
+
+        if (avgLoss === 0 && avgGain === 0) out[i] = 50;
+        else if (avgLoss === 0) out[i] = 100;
+        else out[i] = 100 - 100 / (1 + avgGain / avgLoss);
+      }
+
+      return out;
+    }
+
+    function lastValue(arr) {
+      for (let i = arr.length - 1; i >= 0; i--) {
+        if (finite(arr[i])) return arr[i];
+      }
+      return null;
+    }
+
+    function lastTwoValues(arr) {
+      let last = null;
+      let prev = null;
+
+      for (let i = arr.length - 1; i >= 0; i--) {
+        if (finite(arr[i])) {
+          if (last === null) last = arr[i];
+          else {
+            prev = arr[i];
+            break;
+          }
+        }
+      }
+
+      return { prev, last };
+    }
+
+    function calcMACD(closes) {
+      const ema12 = emaArray(closes, 12);
+      const ema26 = emaArray(closes, 26);
+
+      const macdSeries = new Array(closes.length).fill(null);
+      const compact = [];
+      const indices = [];
+
+      for (let i = 0; i < closes.length; i++) {
+        if (finite(ema12[i]) && finite(ema26[i])) {
+          const val = ema12[i] - ema26[i];
+          macdSeries[i] = val;
+          compact.push(val);
+          indices.push(i);
+        }
+      }
+
+      const signalCompact = emaArray(compact, 9);
+      const signalSeries = new Array(closes.length).fill(null);
+
+      for (let i = 0; i < signalCompact.length; i++) {
+        signalSeries[indices[i]] = signalCompact[i];
+      }
+
+      const lineVals = lastTwoValues(macdSeries);
+      const sigVals = lastTwoValues(signalSeries);
+
+      const line = lineVals.last;
+      const signal = sigVals.last;
+
+      return {
+        line,
+        signal,
+        hist: finite(line) && finite(signal) ? line - signal : null,
+        prevLine: lineVals.prev,
+        prevSignal: sigVals.prev
+      };
+    }
+
+    function calcStochRSI(rsiSeries, period = 14) {
+      const stoch = new Array(rsiSeries.length).fill(null);
+
+      for (let i = 0; i < rsiSeries.length; i++) {
+        const window = rsiSeries.slice(Math.max(0, i - period + 1), i + 1).filter(finite);
+        if (window.length < period) continue;
+
+        const min = Math.min(...window);
+        const max = Math.max(...window);
+
+        stoch[i] = max === min ? 50 : ((rsiSeries[i] - min) / (max - min)) * 100;
+      }
+
+      const k = lastValue(stoch);
+      const recent = stoch.filter(finite).slice(-3);
+      const d = mean(recent);
+
+      return { k, d };
+    }
+
+    function calcOBV(arr) {
+      if (arr.length < 2) return null;
+      let obv = 0;
+
+      for (let i = 1; i < arr.length; i++) {
+        if (arr[i].c > arr[i - 1].c) obv += arr[i].v;
+        else if (arr[i].c < arr[i - 1].c) obv -= arr[i].v;
+      }
+
+      return obv;
+    }
+
+    function calcVWAP(arr, period = 50) {
+      const slice = arr.slice(-period);
+      let quote = 0;
+      let volume = 0;
+
+      for (const c of slice) {
+        const typical = (c.h + c.l + c.c) / 3;
+        const q = finite(c.qv) && c.qv > 0 ? c.qv : typical * c.v;
+
+        quote += q;
+        volume += c.v;
+      }
+
+      return volume > 0 ? quote / volume : null;
+    }
+
+    function calcBollinger(closes, period = 20, mult = 2) {
+      if (closes.length < period) return null;
+
+      const slice = closes.slice(-period);
+      const basis = mean(slice);
+      const variance = mean(slice.map(v => Math.pow(v - basis, 2)));
+      const sd = Math.sqrt(variance);
+
+      return {
+        upper: basis + mult * sd,
+        basis,
+        lower: basis - mult * sd
+      };
+    }
+
+    function calcATR(arr, period = 14) {
+      if (arr.length <= period) return null;
+
+      const trs = [];
+
+      for (let i = 1; i < arr.length; i++) {
+        const cur = arr[i];
+        const prev = arr[i - 1];
+
+        trs.push(Math.max(
+          cur.h - cur.l,
+          Math.abs(cur.h - prev.c),
+          Math.abs(cur.l - prev.c)
+        ));
+      }
+
+      return mean(trs.slice(-period));
+    }
+
+    function calcADX(arr, period = 14) {
+      if (arr.length < period * 2 + 1) {
+        return { adx: null, plusDI: null, minusDI: null };
+      }
+
+      const trs = [];
+      const plusDMs = [];
+      const minusDMs = [];
+
+      for (let i = 1; i < arr.length; i++) {
+        const cur = arr[i];
+        const prev = arr[i - 1];
+
+        const upMove = cur.h - prev.h;
+        const downMove = prev.l - cur.l;
+
+        plusDMs.push(upMove > downMove && upMove > 0 ? upMove : 0);
+        minusDMs.push(downMove > upMove && downMove > 0 ? downMove : 0);
+
+        trs.push(Math.max(
+          cur.h - cur.l,
+          Math.abs(cur.h - prev.c),
+          Math.abs(cur.l - prev.c)
+        ));
+      }
+
+      const dxs = [];
+      let lastPlusDI = null;
+      let lastMinusDI = null;
+
+      for (let end = period - 1; end < trs.length; end++) {
+        const trSum = trs.slice(end - period + 1, end + 1).reduce((a, b) => a + b, 0);
+        const plusSum = plusDMs.slice(end - period + 1, end + 1).reduce((a, b) => a + b, 0);
+        const minusSum = minusDMs.slice(end - period + 1, end + 1).reduce((a, b) => a + b, 0);
+
+        const plusDI = trSum === 0 ? 0 : 100 * plusSum / trSum;
+        const minusDI = trSum === 0 ? 0 : 100 * minusSum / trSum;
+        const dx = (plusDI + minusDI) === 0 ? 0 : 100 * Math.abs(plusDI - minusDI) / (plusDI + minusDI);
+
+        dxs.push(dx);
+        lastPlusDI = plusDI;
+        lastMinusDI = minusDI;
+      }
+
+      return {
+        adx: mean(dxs.slice(-period)),
+        plusDI: lastPlusDI,
+        minusDI: lastMinusDI
+      };
+    }
+
+    function labelForScore(score) {
+      if (score <= 20) return { ar: "بيع قوي", en: "SELL STRONG", className: "sellStrong", color: "#ef4444" };
+      if (score <= 40) return { ar: "بيع", en: "SELL", className: "sell", color: "#f97316" };
+      if (score <= 60) return { ar: "محايد", en: "NEUTRAL", className: "neutral", color: "#f59e0b" };
+      if (score <= 80) return { ar: "شراء", en: "BUY", className: "buy", color: "#22c55e" };
+      return { ar: "شراء قوي", en: "BUY STRONG", className: "buyStrong", color: "#10b981" };
+    }
+
+    function confidenceForScore(score) {
+      if (score >= 61) return Math.round(score);
+      if (score <= 40) return Math.round(100 - score);
+
+      const distance = Math.abs(score - 50);
+      return Math.round(60 + (10 - Math.min(10, distance)) * 2);
+    }
+
+    function calcRecommendation(m) {
+      let score = 50;
+
+      if ([m.ema20, m.ema50, m.ema100, m.ema200].every(finite)) {
+        if (m.close > m.ema20 && m.ema20 > m.ema50 && m.ema50 > m.ema100 && m.ema100 > m.ema200) {
+          score += 25;
+        } else if (m.close < m.ema20 && m.ema20 < m.ema50 && m.ema50 < m.ema100 && m.ema100 < m.ema200) {
+          score -= 25;
+        } else {
+          score += m.close > m.ema20 ? 5 : -5;
+          score += m.ema20 > m.ema50 ? 7 : -7;
+          score += m.ema50 > m.ema200 ? 5 : -5;
+        }
+      }
+
+      if (m.macd && finite(m.macd.hist)) {
+        score += m.macd.hist >= 0 ? 12 : -12;
+
+        if (finite(m.macd.line) && finite(m.macd.signal)) {
+          score += m.macd.line > m.macd.signal ? 5 : -5;
+        }
+      }
+
+      if (finite(m.rsi)) {
+        if (m.rsi < 30) score += 8;
+        else if (m.rsi < 45) score -= 8;
+        else if (m.rsi <= 55) score += 0;
+        else if (m.rsi <= 70) score += 8;
+        else score -= 8;
+      }
+
+      if (m.bb && finite(m.bb.upper) && finite(m.bb.lower)) {
+        if (m.close < m.bb.lower) score += 8;
+        else if (m.close > m.bb.upper) score -= 8;
+        else score += m.close > m.bb.basis ? 3 : -3;
+      }
+
+      if (finite(m.volume) && finite(m.avgVolume) && m.avgVolume > 0) {
+        if (m.volume > m.avgVolume * 1.2) {
+          score += m.close >= m.open ? 7 : -7;
+        }
+      }
+
+      if (m.adx && finite(m.adx.adx) && m.adx.adx > 25) {
+        score += m.adx.plusDI >= m.adx.minusDI ? 10 : -10;
+      }
+
+      score = clamp(Math.round(score), 0, 100);
+
+      return {
+        score,
+        confidence: confidenceForScore(score),
+        ...labelForScore(score)
+      };
+    }
+
+    function computeMetrics(arr) {
+      if (!arr || arr.length < 30) {
+        return { ready: false };
+      }
+
+      const closes = arr.map(c => c.c);
+      const volumes = arr.map(c => c.v);
+      const last = arr[arr.length - 1];
+
+      const ema20 = lastValue(emaArray(closes, 20));
+      const ema50 = lastValue(emaArray(closes, 50));
+      const ema100 = lastValue(emaArray(closes, 100));
+      const ema200 = lastValue(emaArray(closes, 200));
+
+      const rsiSeries = rsiArray(closes, 14);
+      const rsi = lastValue(rsiSeries);
+
+      const m = {
+        ready: true,
+        open: last.o,
+        close: last.c,
+        high: last.h,
+        low: last.l,
+        volume: last.v,
+        avgVolume: mean(volumes.slice(-20)),
+        ema20,
+        ema50,
+        ema100,
+        ema200,
+        rsi,
+        macd: calcMACD(closes),
+        stochRsi: calcStochRSI(rsiSeries, 14),
+        obv: calcOBV(arr),
+        vwap: calcVWAP(arr, 50),
+        bb: calcBollinger(closes, 20, 2),
+        atr: calcATR(arr, 14),
+        adx: calcADX(arr, 14)
+      };
+
+      m.recommendation = calcRecommendation(m);
+
+      return m;
+    }
+
+    function computeAllMetrics() {
+      for (const tf of INTERVALS) {
+        metrics[tf] = computeMetrics(candles[tf]);
+      }
+    }
+
+    function renderMarket() {
+      setText("marketPrice", fmtPrice(market.price));
+
+      const ch = $("marketChange");
+      ch.textContent = fmtPct(market.change);
+      ch.classList.toggle("positive", finite(market.change) && market.change >= 0);
+      ch.classList.toggle("negative", finite(market.change) && market.change < 0);
+
+      const volumeText = finite(market.volumeBase)
+        ? `${fmtCompact(market.volumeBase)} BTC`
+        : "—";
+
+      setText("marketVolume", volumeText);
+      setText("marketHigh", fmtPrice(market.high));
+      setText("marketLow", fmtPrice(market.low));
+
+      setText(
+        "lastUpdate",
+        market.updated ? new Date(market.updated).toLocaleTimeString("ar-EG") : "—"
+      );
+    }
+
+    function renderIndicators() {
+      const tf = $("indicatorFrame").value;
+      const m = metrics[tf];
+
+      if (!m || !m.ready) return;
+
+      setText("ema20", fmtPrice(m.ema20));
+      setText("ema50", fmtPrice(m.ema50));
+      setText("ema100", fmtPrice(m.ema100));
+      setText("ema200", fmtPrice(m.ema200));
+      setText("rsi14", finite(m.rsi) ? m.rsi.toFixed(2) : "—");
+
+      setText(
+        "macdVal",
+        m.macd && finite(m.macd.line)
+          ? `${m.macd.line.toFixed(2)} / ${m.macd.signal.toFixed(2)} / ${m.macd.hist.toFixed(2)}`
+          : "—"
+      );
+
+      setText(
+        "stochRsi",
+        m.stochRsi && finite(m.stochRsi.k)
+          ? `K ${m.stochRsi.k.toFixed(2)} / D ${m.stochRsi.d.toFixed(2)}`
+          : "—"
+      );
+
+      setText("volumeInd", finite(m.volume) ? `${fmtCompact(m.volume)} BTC` : "—");
+      setText("obvVal", finite(m.obv) ? fmtCompact(m.obv) : "—");
+      setText("vwapVal", fmtPrice(m.vwap));
+
+      setText(
+        "bbVal",
+        m.bb
+          ? `${fmtPrice(m.bb.lower)} / ${fmtPrice(m.bb.basis)} / ${fmtPrice(m.bb.upper)}`
+          : "—"
+      );
+
+      setText("atrVal", fmtPrice(m.atr));
+
+      setText(
+        "adxVal",
+        m.adx && finite(m.adx.adx)
+          ? `${m.adx.adx.toFixed(2)} | +DI ${m.adx.plusDI.toFixed(1)} | -DI ${m.adx.minusDI.toFixed(1)}`
+          : "—"
+      );
+    }
+
+    function renderRecommendations() {
+      const rows = RECOMMENDATION_FRAMES.map(tf => {
+        const rec = metrics[tf]?.recommendation;
+
+        if (!rec) {
+          return `<tr><td>${tf}</td><td>—</td><td>—</td></tr>`;
+        }
+
+        return `
+          <tr>
+            <td>${tf}</td>
+            <td><span class="pill ${rec.className}">${rec.ar}</span></td>
+            <td>${rec.confidence}%</td>
+          </tr>
+        `;
+      }).join("");
+
+      setHTML("recommendationsBody", rows);
+    }
+
+    function renderConsensus() {
+      const scores = RECOMMENDATION_FRAMES
+        .map(tf => metrics[tf]?.recommendation?.score)
+        .filter(finite);
+
+      const score = scores.length ? Math.round(mean(scores)) : 50;
+      const confidence = confidenceForScore(score);
+      const info = labelForScore(score);
+
+      const gauge = $("consensusGauge");
+      gauge.style.background = `conic-gradient(${info.color} ${confidence * 3.6}deg, rgba(148,163,184,.18) 0deg)`;
+
+      setText("consensusPercent", `${confidence}%`);
+      setText("consensusDirection", `${info.en} - ${info.ar}`);
+      setText("buyersPct", `${score}%`);
+      setText("sellersPct", `${100 - score}%`);
+
+      const card = $("consensusCard");
+      card.classList.remove("buyStrong", "buy", "neutral", "sell", "sellStrong");
+      card.classList.add(info.className);
+    }
+
+    function clusterLevels(levels, toleranceRatio = 0.0015) {
+      const sorted = levels.filter(finite).sort((a, b) => a - b);
+      const clusters = [];
+
+      for (const level of sorted) {
+        const last = clusters[clusters.length - 1];
+
+        if (!last || Math.abs(level - last.avg) / last.avg > toleranceRatio) {
+          clusters.push({ avg: level, count: 1 });
+        } else {
+          last.avg = (last.avg * last.count + level) / (last.count + 1);
+          last.count += 1;
+        }
+      }
+
+      return clusters.map(c => c.avg);
+    }
+
+    function computeLevels(arr, price) {
+      const empty = {
+        support1: null,
+        support2: null,
+        resistance1: null,
+        resistance2: null
+      };
+
+      if (!arr || arr.length < 20 || !finite(price)) return empty;
+
+      let lows = [];
+      let highs = [];
+
+      for (let i = 2; i < arr.length - 2; i++) {
+        const c = arr[i];
+
+        if (
+          c.l <= arr[i - 1].l &&
+          c.l <= arr[i - 2].l &&
+          c.l <= arr[i + 1].l &&
+          c.l <= arr[i + 2].l
+        ) {
+          lows.push(c.l);
+        }
+
+        if (
+          c.h >= arr[i - 1].h &&
+          c.h >= arr[i - 2].h &&
+          c.h >= arr[i + 1].h &&
+          c.h >= arr[i + 2].h
+        ) {
+          highs.push(c.h);
+        }
+      }
+
+      lows = clusterLevels(lows);
+      highs = clusterLevels(highs);
+
+      if (lows.length < 2 || highs.length < 2) {
+        const recent = arr.slice(-90);
+        lows = clusterLevels([...lows, ...recent.map(c => c.l)]);
+        highs = clusterLevels([...highs, ...recent.map(c => c.h)]);
+      }
+
+      const supports = lows.filter(l => l < price).sort((a, b) => b - a);
+      const resistances = highs.filter(h => h > price).sort((a, b) => a - b);
+
+      return {
+        support1: supports[0] ?? null,
+        support2: supports[1] ?? null,
+        resistance1: resistances[0] ?? null,
+        resistance2: resistances[1] ?? null
+      };
+    }
+
+    function levelHTML(level, type) {
+      const price = market.price;
+
+      if (!finite(level) || !finite(price)) return "—";
+
+      const dist = type === "support"
+        ? ((price - level) / price) * 100
+        : ((level - price) / price) * 100;
+
+      return `
+        <b>${fmtPrice(level)}</b>
+        <small>${dist.toFixed(2)}% من السعر الحالي</small>
+      `;
+    }
+
+    function renderLevels() {
+      const price = market.price || metrics["15m"]?.close;
+      currentLevels = computeLevels(candles["15m"], price);
+
+      setHTML("support1", levelHTML(currentLevels.support1, "support"));
+      setHTML("support2", levelHTML(currentLevels.support2, "support"));
+      setHTML("resistance1", levelHTML(currentLevels.resistance1, "resistance"));
+      setHTML("resistance2", levelHTML(currentLevels.resistance2, "resistance"));
+    }
+
+    function renderSignals() {
+      const price = market.price;
+      const atr = metrics["15m"]?.atr || (finite(price) ? price * 0.005 : null);
+
+      const scores = RECOMMENDATION_FRAMES
+        .map(tf => metrics[tf]?.recommendation?.score)
+        .filter(finite);
+
+      if (!finite(price) || !finite(atr) || !scores.length) {
+        return;
+      }
+
+      const score = Math.round(mean(scores));
+
+      if (score > 60) {
+        let entry = price;
+        let sl = currentLevels.support1 && currentLevels.support1 < entry
+          ? currentLevels.support1
+          : entry - atr * 1.5;
+
+        if (sl >= entry) sl = entry - atr * 1.5;
+
+        const risk = entry - sl;
+
+        let t1 = currentLevels.resistance1 && currentLevels.resistance1 > entry
+          ? currentLevels.resistance1
+          : entry + risk * 1.5;
+
+        let t2 = currentLevels.resistance2 && currentLevels.resistance2 > t1
+          ? currentLevels.resistance2
+          : entry + risk * 2.5;
+
+        const rr = (t1 - entry) / risk;
+
+        setText("signalSide", "شراء / Long");
+        setText("entryPoint", fmtPrice(entry));
+        setText("stopLoss", fmtPrice(sl));
+        setText("target1", fmtPrice(t1));
+        setText("target2", fmtPrice(t2));
+        setText("rrRatio", `1:${rr.toFixed(2)}`);
+
+      } else if (score < 41) {
+        let entry = price;
+        let sl = currentLevels.resistance1 && currentLevels.resistance1 > entry
+          ? currentLevels.resistance1
+          : entry + atr * 1.5;
+
+        if (sl <= entry) sl = entry + atr * 1.5;
+
+        const risk = sl - entry;
+
+        let t1 = currentLevels.support1 && currentLevels.support1 < entry
+          ? currentLevels.support1
+          : entry - risk * 1.5;
+
+        let t2 = currentLevels.support2 && currentLevels.support2 < t1
+          ? currentLevels.support2
+          : entry - risk * 2.5;
+
+        const rr = (entry - t1) / risk;
+
+        setText("signalSide", "بيع / Short");
+        setText("entryPoint", fmtPrice(entry));
+        setText("stopLoss", fmtPrice(sl));
+        setText("target1", fmtPrice(t1));
+        setText("target2", fmtPrice(t2));
+        setText("rrRatio", `1:${rr.toFixed(2)}`);
+
+      } else {
+        setText("signalSide", "انتظار / محايد");
+        setText("entryPoint", "اختراق مقاومة أو كسر دعم");
+        setText("stopLoss", "—");
+        setText("target1", "—");
+        setText("target2", "—");
+        setText("rrRatio", "—");
+      }
+    }
+
+    function fireAlert(key, message, type = "warn", cooldownMs = 45000) {
+      const now = Date.now();
+
+      if (alertCooldown[key] && now - alertCooldown[key] < cooldownMs) return;
+
+      alertCooldown[key] = now;
+
+      const list = $("alertsList");
+      const first = list.querySelector(".alert-item .muted");
+
+      if (first) list.innerHTML = "";
+
+      const li = document.createElement("li");
+      li.className = `alert-item ${type}`;
+      li.innerHTML = `
+        <span>${message}</span>
+        <small>${new Date(now).toLocaleTimeString("ar-EG")}</small>
+      `;
+
+      list.prepend(li);
+
+      while (list.children.length > 12) {
+        list.removeChild(list.lastElementChild);
+      }
+
+      playSound(type);
+    }
+
+    function playSound(type) {
+      if (!soundEnabled || !audioCtx) return;
+
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      const now = audioCtx.currentTime;
+
+      oscillator.type = "sine";
+      oscillator.frequency.value = type === "bull" ? 880 : type === "bear" ? 330 : 620;
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      oscillator.start(now);
+      oscillator.stop(now + 0.24);
+    }
+
+    function checkAlerts() {
+      for (const tf of RECOMMENDATION_FRAMES) {
+        const m = metrics[tf];
+        if (!m || !m.ready) continue;
+
+        const lastCandle = candles[tf][candles[tf].length - 1];
+        const candleKey = lastCandle ? lastCandle.t : Date.now();
+
+        if (
+          m.macd &&
+          finite(m.macd.prevLine) &&
+          finite(m.macd.prevSignal) &&
+          finite(m.macd.line) &&
+          finite(m.macd.signal)
+        ) {
+          if (m.macd.prevLine <= m.macd.prevSignal && m.macd.line > m.macd.signal) {
+            fireAlert(`macd-bull-${tf}-${candleKey}`, `تقاطع MACD صاعد على فريم ${tf}`, "bull");
+          }
+
+          if (m.macd.prevLine >= m.macd.prevSignal && m.macd.line < m.macd.signal) {
+            fireAlert(`macd-bear-${tf}-${candleKey}`, `تقاطع MACD هابط على فريم ${tf}`, "bear");
+          }
+        }
+
+        if (finite(m.rsi)) {
+          rsiFlags[tf] ||= { over: false, under: false };
+
+          if (m.rsi >= 70 && !rsiFlags[tf].over) {
+            fireAlert(`rsi-over-${tf}`, `RSI تشبع شراء على فريم ${tf}: ${m.rsi.toFixed(2)}`, "warn");
+          }
+
+          if (m.rsi <= 30 && !rsiFlags[tf].under) {
+            fireAlert(`rsi-under-${tf}`, `RSI تشبع بيع على فريم ${tf}: ${m.rsi.toFixed(2)}`, "warn");
+          }
+
+          rsiFlags[tf].over = m.rsi >= 70;
+          rsiFlags[tf].under = m.rsi <= 30;
+        }
+      }
+
+      const price = market.price;
+
+      if (finite(lastRenderPrice) && finite(price)) {
+        if (
+          finite(currentLevels.resistance1) &&
+          lastRenderPrice <= currentLevels.resistance1 &&
+          price > currentLevels.resistance1
+        ) {
+          fireAlert(
+            `break-res-${Math.round(currentLevels.resistance1)}`,
+            `اختراق مقاومة: ${fmtPrice(currentLevels.resistance1)}`,
+            "bull"
+          );
+        }
+
+        if (
+          finite(currentLevels.support1) &&
+          lastRenderPrice >= currentLevels.support1 &&
+          price < currentLevels.support1
+        ) {
+          fireAlert(
+            `break-sup-${Math.round(currentLevels.support1)}`,
+            `كسر دعم: ${fmtPrice(currentLevels.support1)}`,
+            "bear"
+          );
+        }
+      }
+
+      if (finite(price)) lastRenderPrice = price;
+    }
+
+    function renderDashboard() {
+      computeAllMetrics();
+      renderMarket();
+      renderIndicators();
+      renderRecommendations();
+      renderConsensus();
+      renderLevels();
+      renderSignals();
+      checkAlerts();
+    }
+
+    function setupControls() {
+      $("themeToggle").addEventListener("click", () => {
+        document.body.classList.toggle("light");
+        $("themeToggle").textContent = document.body.classList.contains("light")
+          ? "الوضع الليلي"
+          : "الوضع النهاري";
+
+        initTradingView();
+      });
+
+      $("indicatorFrame").addEventListener("change", renderIndicators);
+
+      $("soundToggle").addEventListener("click", async () => {
+        try {
+          audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+          await audioCtx.resume();
+          soundEnabled = true;
+          $("soundToggle").textContent = "الصوت مفعل";
+          fireAlert(`sound-${Date.now()}`, "تم تفعيل التنبيهات الصوتية", "bull", 1000);
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      setupControls();
+      initTradingView();
+      updateConnection();
+
+      const results = await Promise.allSettled(INTERVALS.map(loadHistory));
+      const failed = results.filter(r => r.status === "rejected");
+
+      if (failed.length) {
+        showError("تعذر تحميل بعض البيانات التاريخية من Binance. لن يتم استخدام أي بيانات وهمية، وسيتم الاعتماد على البيانات الحية عند توفرها.");
+      }
+
+      connectSocket();
+      renderDashboard();
+      setInterval(renderDashboard, 1000);
+    });
+  </script>
 </body>
 </html>
